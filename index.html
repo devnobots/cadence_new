@@ -140,7 +140,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build">build 0930-b</div>
+  <div class="build" id="buildStamp">build 1008-a</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
@@ -242,6 +242,7 @@ const CONFIG = {
 
   STRIP_WINDOW_S:30,                // seconds of history shown in the strip chart
   STRIP_HZ:4,                       // samples per second pushed to the strip
+  FETCH_TIMEOUT_MS:45000,           // a download that goes quiet this long is abandoned (prevents a stuck start screen)
   PREFETCH_MAX_MB:150,              // stop pre-downloading raw audio past this many MB (rest loads on demand)
   HEARTBEAT_MS:5000,                // log a status line this often while running
 };
@@ -284,17 +285,24 @@ const moveFloor=()=>CONFIG.MOVE_FLOOR[mode];
 /* ============================================================================
    Playlist (auto-list from GitHub, alphabetical)
    ============================================================================ */
+function fetchWithTimeout(url, opts, ms){
+  const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(), ms);
+  return fetch(url, Object.assign({}, opts, {signal:ctl.signal})).finally(()=>clearTimeout(t));
+}
 async function loadPlaylist(){
   const api=`https://api.github.com/repos/${CONFIG.REPO}/contents/?ref=${CONFIG.BRANCH}`;
   const t0=performance.now();
   el.startBtn.disabled=true; el.startBtn.textContent='Loading…'; el.loadStatus.textContent='Finding songs…';
   try{
-    const res=await fetch(api); if(!res.ok) throw new Error('list '+res.status);
+    // never trust a cached listing: a song swap in the repo must show up on the next page open
+    const res=await fetchWithTimeout(api+'&t='+Date.now(), {cache:'no-store'}, CONFIG.FETCH_TIMEOUT_MS); if(!res.ok) throw new Error('list '+res.status);
     const items=await res.json();
-    const names=items.filter(x=>x.type==='file'&&/\.(mp3|m4a|aac)$/i.test(x.name))
-      .map(x=>x.name).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
-    if(!names.length) throw new Error('no audio files');
-    playlist=names.map(n=>`https://raw.githubusercontent.com/${CONFIG.REPO}/${CONFIG.BRANCH}/${encodeURIComponent(n)}`);
+    const files=items.filter(x=>x.type==='file'&&/\.(mp3|m4a|aac|flac|wav)$/i.test(x.name))
+      .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+    if(!files.length) throw new Error('no audio files');
+    // the blob sha changes whenever the file content changes, so the URL changes too and no CDN or
+    // browser cache can ever hand back an old version of a replaced song
+    playlist=files.map(x=>`https://raw.githubusercontent.com/${CONFIG.REPO}/${CONFIG.BRANCH}/${encodeURIComponent(x.name)}?v=${(x.sha||'').slice(0,12)}`);
     LOG('playlist: '+playlist.length+' songs ('+(performance.now()-t0).toFixed(0)+'ms)');
     el.loadStatus.textContent=`${playlist.length} songs · loading song 1…`;
     // Start becomes live the moment song 1 is decoded — the download+decode is
@@ -355,7 +363,7 @@ async function fetchTrack(i){
   fetching[i]=(async()=>{
     const t0=performance.now();
     try{
-      const res=await fetch(playlist[i]); if(!res.ok) throw new Error('fetch '+res.status);
+      const res=await fetchWithTimeout(playlist[i], {}, CONFIG.FETCH_TIMEOUT_MS); if(!res.ok) throw new Error('fetch '+res.status);
       const arr=await res.arrayBuffer();
       bytesCache[i]=arr; bytesMB+=arr.byteLength/1048576;
       LOG('fetch done #'+(i+1)+' '+(arr.byteLength/1048576).toFixed(1)+'MB in '+(performance.now()-t0).toFixed(0)+'ms');
@@ -373,11 +381,11 @@ async function prefetchAll(){
   for(let i=0;i<playlist.length;i++){
     if(i>0 && bytesMB>CONFIG.PREFETCH_MAX_MB){ LOG('prefetch cap reached at #'+i+' ('+bytesMB.toFixed(0)+'MB); rest loads on demand'); break; }
     const arr=await fetchTrack(i);
-    if(i===0){
-      const buf=arr?await decodeTrack(0):null;
-      if(buf){ firstReady=true; el.loadStatus.textContent=`${playlist.length} songs · ready`; el.startBtn.textContent='Start'; el.startBtn.disabled=false; }
-      else { el.loadStatus.textContent='Song 1 failed to load'; el.startBtn.textContent='Retry'; el.startBtn.disabled=false; }
-    } else if(!firstReady){ break; }
+    if(!firstReady){
+      const buf=arr?await decodeTrack(i):null;
+      if(buf){ firstReady=true; trackIdx=i; el.loadStatus.textContent=`${playlist.length} songs · ready`; el.startBtn.textContent='Start'; el.startBtn.disabled=false; }
+      else { LOG('song #'+(i+1)+' unusable as first track, trying next'); el.loadStatus.textContent=`song ${i+1} failed, trying ${i+2}…`; if(i===playlist.length-1){ el.loadStatus.textContent='No song could be loaded'; el.startBtn.textContent='Retry'; el.startBtn.disabled=false; } }
+    }
     else { el.loadStatus.textContent=`${playlist.length} songs · ready (${i+1} cached)`; }
   }
   prefetching=false;
@@ -914,7 +922,7 @@ el.startBtn.onclick=async ()=>{
 
   window.addEventListener('devicemotion',onMotion);
   startGPS();
-  loadTrack(0,false);   // song 1 is already decoded: this only sets the current track
+  loadTrack(trackIdx,false);   // song 1 is already decoded: this only sets the current track
 
   armed=true;
   el.gate.classList.add('hidden');
@@ -957,6 +965,17 @@ el.logCopy.onclick=async ()=>{
 };
 
 loadPlaylist();
+
+// Self-update: compare the live index.html's build stamp with this one; reload once if it differs.
+(async()=>{
+  try{
+    if(sessionStorage.getItem('cadence-reloaded')==='1'){ sessionStorage.removeItem('cadence-reloaded'); return; }
+    const r=await fetchWithTimeout(location.pathname+'?v='+Date.now(), {cache:'no-store'}, 8000); if(!r.ok) return;
+    const m=(await r.text()).match(/id="buildStamp">([^<]+)</);
+    const mine=$('buildStamp').textContent.trim();
+    if(m && m[1].trim()!==mine){ LOG('newer build on server ('+m[1].trim()+'), reloading'); sessionStorage.setItem('cadence-reloaded','1'); location.reload(); }
+  }catch(_){}
+})();
 </script>
 </body>
 </html>
