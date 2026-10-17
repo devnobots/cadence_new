@@ -16,7 +16,14 @@
     --bg:#000; --ink:#e9e4d8; --ink-dim:#6f6a5f; --ink-soft:#b3ad9f;
     --live:#c6ff4a; --pause:#c94b3b; --line:#232323;
     --font:'Barlow Semi Condensed', system-ui, sans-serif;
+    --vw:1vw;
   }
+  /* Phone turned sideways: rotate the whole page back so it still looks upright (works on iPhone too,
+     where pages can't lock orientation). data-rot is set from the device angle in JS. */
+  html[data-rot="-90"],html[data-rot="90"]{--vw:1vh;}
+  html[data-rot="-90"] body,html[data-rot="90"] body{position:fixed;top:0;left:0;width:100vh;height:100vw;transform-origin:0 0;}
+  html[data-rot="-90"] body{transform:translateY(100vh) rotate(-90deg);}
+  html[data-rot="90"] body{transform:translateX(100vw) rotate(90deg);}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
   html,body{height:100%;}
   body{height:100svh;}  /* small viewport = height with browser toolbars showing, so the dock never hides behind them */
@@ -29,9 +36,9 @@
 
   #gate{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;padding:1.5rem 1rem calc(1.5rem + 80px);text-align:center;overflow-y:auto;}
   #gate.hidden{display:none;}
-  #gate h1{font-weight:800;font-size:clamp(2.4rem,11vw,3.6rem);letter-spacing:-.02em;line-height:.92;flex-shrink:0;}
+  #gate h1{font-weight:800;font-size:clamp(2.4rem,calc(11*var(--vw)),3.6rem);letter-spacing:-.02em;line-height:.92;flex-shrink:0;}
   #gate h1 span{display:block;color:var(--ink-dim);font-weight:600;font-size:.34em;letter-spacing:.02em;margin-top:.6rem;}
-  .picklabel{color:var(--ink-soft);font-size:clamp(.7rem,3.6vw,.88rem);letter-spacing:.08em;margin-bottom:-.4rem;white-space:nowrap;}  /* vw, so iOS Larger Text can't push it off-screen */
+  .picklabel{color:var(--ink-soft);font-size:clamp(.7rem,calc(3.6*var(--vw)),.88rem);letter-spacing:.08em;margin-bottom:-.4rem;white-space:nowrap;}  /* vw, so iOS Larger Text can't push it off-screen */
   /* always one row of three: each button takes a third, never wraps */
   .modepick,.pacepick{display:flex;gap:.5rem;flex-wrap:nowrap;justify-content:center;width:min(100%,340px);}
   .modepick button,.pacepick button{
@@ -60,7 +67,7 @@
 .readout{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding-top:.5rem;pointer-events:none;}
 
   /* gauge: 270° tick ring with a lime arc and needle; the big digit lives inside it */
-  .gauge{position:relative;width:min(76vw,378px);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .gauge{position:relative;width:min(calc(76*var(--vw)),378px);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
   .gauge svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
   /* the halo is the blurred arc itself (SVG), so it only exists where the lime arc exists */
   .g-tick{stroke:#2a2a2a;stroke-width:3;stroke-linecap:round;}
@@ -72,8 +79,8 @@
   .g-fill-glow{fill:none;stroke:var(--live);stroke-width:30;stroke-linecap:round;opacity:.5;transition:stroke-dasharray .2s linear;}
   .g-needle{fill:var(--ink);}
   #needle{transition:transform .2s linear;}
-  .metric{position:relative;font-weight:800;font-size:clamp(4.5rem,27vw,9.9rem);line-height:.85;letter-spacing:-.04em;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:-.15em;}
-  .unit{position:relative;color:var(--ink-dim);font-weight:600;font-size:clamp(.9rem,4vw,1.35rem);letter-spacing:.1em;margin-top:.2rem;}
+  .metric{position:relative;font-weight:800;font-size:clamp(4.5rem,calc(27*var(--vw)),9.9rem);line-height:.85;letter-spacing:-.04em;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:-.15em;}
+  .unit{position:relative;color:var(--ink-dim);font-weight:600;font-size:clamp(.9rem,calc(4*var(--vw)),1.35rem);letter-spacing:.1em;margin-top:.2rem;}
   .goalline{position:relative;top:5px;margin-top:.5rem;color:var(--ink-dim);font-size:calc(.92rem + 4px);letter-spacing:.03em;}
   .goalline b{color:var(--ink);font-weight:600;}
   .state{margin-top:calc(.5rem - 20px);font-weight:600;font-size:1.15rem;letter-spacing:.04em;color:var(--pause);height:1.4em;}
@@ -101,9 +108,6 @@
   #endBtn .lbl{position:relative;z-index:1;}
 
   /* portrait lock message */
-  #rotate{position:fixed;inset:0;background:var(--bg);z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:2rem;}
-  #rotate .big{font-weight:800;font-size:2rem;}
-  #rotate .sub{color:var(--ink-dim);}
 
   /* log panel */
   #logPanel{position:fixed;left:0;right:0;bottom:0;max-height:45vh;background:#0a0a0a;border-top:1px solid var(--line);z-index:80;display:none;flex-direction:column;}
@@ -112,7 +116,6 @@
   #logHead button{background:transparent;border:1px solid var(--line);color:var(--ink);font-family:var(--font);font-weight:600;font-size:.8rem;padding:.4rem .8rem;border-radius:2px;cursor:pointer;}
   #logText{flex:1;overflow-y:auto;font-family:ui-monospace,monospace;font-size:.68rem;line-height:1.35;color:var(--ink-dim);padding:.5rem .7rem;white-space:pre-wrap;word-break:break-word;user-select:text;-webkit-user-select:text;}
   #logToggle{position:fixed;top:calc(env(safe-area-inset-top) + .6rem);left:.6rem;z-index:81;background:#0a0a0a;border:1px solid var(--line);color:var(--ink-dim);font-family:var(--font);font-weight:600;font-size:.72rem;padding:.35rem .6rem;border-radius:2px;cursor:pointer;}
-  @media (orientation:landscape) and (max-height:500px){ #rotate{display:flex;} #gate,#app{display:none!important;} }
 </style>
 </head>
 <body>
@@ -136,7 +139,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">ver 1.3</div>
+  <div class="build" id="buildStamp">ver 1.4</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
@@ -176,7 +179,6 @@
   </div>
 </div>
 
-<div id="rotate"><div class="big">Rotate to portrait</div><div class="sub">Cadence runs upright</div></div>
 
 <button type="button" id="logToggle">LOG</button>
 <div id="logPanel">
@@ -239,6 +241,19 @@ const CONFIG = {
    DOM
    ============================================================================ */
 const $=id=>document.getElementById(id);
+
+// Counter-rotation: a phone held sideways gets the page rotated back the other way (see html[data-rot] CSS).
+// Only touch devices with a short side <=500px, so a small desktop window is never rotated.
+function applyRotation(){
+  const land=innerWidth>innerHeight && innerHeight<=500 && matchMedia('(pointer:coarse)').matches;
+  const a=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0);
+  const r=!land?0:((a===270||a===-90)?90:-90);   // device turned clockwise -> rotate page clockwise back
+  if(document.documentElement.dataset.rot!==String(r)) document.documentElement.dataset.rot=String(r);
+}
+applyRotation();
+addEventListener('resize',applyRotation);
+addEventListener('orientationchange',()=>setTimeout(applyRotation,100));
+if(screen.orientation&&screen.orientation.addEventListener) screen.orientation.addEventListener('change',applyRotation);
 
 // ?list=<folder> plays the songs in that repo folder (shareable playlists); a link without one is invalid.
 // Only plain folder names are accepted, so a link can't reach outside the repo.
@@ -809,7 +824,7 @@ function exitFullscreen(){
   if(x && (document.fullscreenElement||document.webkitFullscreenElement)){ try{ Promise.resolve(x.call(document)).catch(()=>{}); }catch(_){} }
 }
 async function lockPortrait(){
-  try{ if(screen.orientation&&screen.orientation.lock) await screen.orientation.lock('portrait'); }catch(_){}
+  try{ if(screen.orientation&&screen.orientation.lock){ await screen.orientation.lock('portrait'); LOG('portrait lock on'); } else LOG('portrait lock: not supported'); }catch(e){ LOG('portrait lock failed: '+e.message); }
 }
 
 /* ============================================================================
