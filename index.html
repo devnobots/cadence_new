@@ -74,7 +74,7 @@
   .unit{position:relative;color:var(--ink-dim);font-weight:600;font-size:clamp(.9rem,4vw,1.35rem);letter-spacing:.1em;margin-top:.2rem;}
   .goalline{position:relative;margin-top:.5rem;color:var(--ink-dim);font-size:calc(.92rem + 4px);letter-spacing:.03em;}
   .goalline b{color:var(--ink);font-weight:600;}
-  .state{margin-top:.5rem;font-weight:600;font-size:1.15rem;letter-spacing:.04em;color:var(--pause);height:1.4em;}
+  .state{margin-top:calc(.5rem - 20px);font-weight:600;font-size:1.15rem;letter-spacing:.04em;color:var(--pause);height:1.4em;}
   .state.playing{color:var(--live);}
   .state.armed{color:var(--live);animation:armedpulse 1.8s ease-in-out infinite;}
   .state.warn{color:var(--pause);}
@@ -87,8 +87,8 @@
 
   /* hold-to-act controls */
   .dock{display:flex;flex-direction:column;gap:.7rem;padding:.6rem 1rem 0;}
-  .enddock{margin-top:auto;display:flex;justify-content:center;padding:.5rem 1rem calc(.5rem + 3.5rem);}  /* extra bottom room clears iOS Safari's floating toolbar */
-  @media (display-mode:standalone){ .enddock{padding-bottom:.5rem;} }  /* home-screen app has no browser toolbar */
+  .enddock{margin-top:auto;display:flex;justify-content:center;padding:.5rem 1rem calc(.5rem + 3.5rem + 20px);}  /* extra bottom room clears iOS Safari's floating toolbar */
+  @media (display-mode:standalone){ .enddock{padding-bottom:calc(.5rem + 20px);} }  /* home-screen app has no browser toolbar */
   #paceBtn{flex:none;}
   #paceBtn .pname{color:var(--live);}
   .transport{display:flex;gap:.7rem;}
@@ -136,7 +136,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">build 1017-f</div>
+  <div class="build" id="buildStamp">build 1017-g</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
