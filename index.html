@@ -87,8 +87,6 @@
 
   /* hold-to-act controls */
   .dock{display:flex;flex-direction:column;gap:.7rem;padding:.6rem 1rem 0;}
-  .enddock{margin-top:auto;display:flex;justify-content:center;padding:.5rem 1rem calc(.5rem + 3.5rem + 20px);}  /* extra bottom room clears iOS Safari's floating toolbar */
-  @media (display-mode:standalone){ .enddock{padding-bottom:calc(.5rem + 20px);} }  /* home-screen app has no browser toolbar */
   #paceBtn{flex:none;}
   #paceBtn .pname{color:var(--live);}
   .transport{display:flex;gap:.7rem;}
@@ -96,9 +94,9 @@
   .holdbtn .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--live);opacity:.18;}
   .holdbtn .lbl{position:relative;z-index:1;}
   .holdbtn.armedhold{color:var(--ink);border-color:var(--ink-dim);}
-  #endBtn{position:relative;overflow:hidden;background:transparent;border:1px solid transparent;color:var(--ink-dim);font-family:var(--font);font-weight:600;font-size:.9rem;letter-spacing:.03em;padding:.7rem 0;border-radius:3px;cursor:pointer;align-self:center;width:60%;touch-action:none;}
+  #endBtn{position:relative;overflow:hidden;background:#070707;border:1px solid #1a1a1a;color:var(--ink-dim);font-family:var(--font);font-weight:400;font-size:.95rem;letter-spacing:.03em;padding:.85rem 0;border-radius:3px;cursor:pointer;touch-action:none;}  /* quieter sibling of .holdbtn */
   #endBtn .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--pause);opacity:.2;}
-  #endBtn .lbl{position:relative;z-index:1;text-decoration:underline;text-underline-offset:3px;}
+  #endBtn .lbl{position:relative;z-index:1;}
 
   /* portrait lock message */
   #rotate{position:fixed;inset:0;background:var(--bg);z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:2rem;}
@@ -136,7 +134,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">build 1017-h</div>
+  <div class="build" id="buildStamp">build 1017-i</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
@@ -172,8 +170,6 @@
       <button type="button" class="holdbtn" id="nextBtn"><span class="fill"></span><span class="lbl">Hold &#8250;&#8250;</span></button>
     </div>
     <button type="button" class="holdbtn" id="paceBtn"><span class="fill"></span><span class="lbl">Hold to change speed · <span class="pname" id="paceName">Cruise</span></span></button>
-  </div>
-  <div class="enddock">
     <button type="button" id="endBtn"><span class="fill"></span><span class="lbl">Hold to end</span></button>
   </div>
 </div>
