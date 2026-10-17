@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;800&display=swap" />
 <style>
   :root{
-    --bg:#000; --ink:#e9e4d8; --ink-dim:#6f6a5f;
+    --bg:#000; --ink:#e9e4d8; --ink-dim:#6f6a5f; --ink-soft:#b3ad9f;
     --live:#c6ff4a; --pause:#c94b3b; --line:#232323;
     --font:'Barlow Semi Condensed', system-ui, sans-serif;
   }
@@ -27,11 +27,11 @@
     user-select:none;-webkit-user-select:none;
   }
 
-  #gate{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;padding:1.5rem 1rem;text-align:center;overflow-y:auto;}
+  #gate{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;padding:1.5rem 1rem calc(1.5rem + 80px);text-align:center;overflow-y:auto;}
   #gate.hidden{display:none;}
   #gate h1{font-weight:800;font-size:clamp(2.4rem,11vw,3.6rem);letter-spacing:-.02em;line-height:.92;flex-shrink:0;}
   #gate h1 span{display:block;color:var(--ink-dim);font-weight:600;font-size:.34em;letter-spacing:.02em;margin-top:.6rem;}
-  .picklabel{color:var(--ink-dim);font-size:clamp(.6rem,3.2vw,.75rem);letter-spacing:.08em;margin-bottom:-.4rem;white-space:nowrap;}  /* vw, so iOS Larger Text can't push it off-screen */
+  .picklabel{color:var(--ink-soft);font-size:clamp(.7rem,3.6vw,.88rem);letter-spacing:.08em;margin-bottom:-.4rem;white-space:nowrap;}  /* vw, so iOS Larger Text can't push it off-screen */
   /* always one row of three: each button takes a third, never wraps */
   .modepick,.pacepick{display:flex;gap:.5rem;flex-wrap:nowrap;justify-content:center;width:min(100%,340px);}
   .modepick button,.pacepick button{
@@ -45,9 +45,9 @@
   .pacepick button[aria-pressed="true"] .sub{color:var(--live);opacity:.7;}
   #startBtn{background:var(--live);color:#000;border:none;font-family:var(--font);font-weight:800;font-size:1.5rem;letter-spacing:.01em;padding:1rem 0;width:min(100%,160px);border-radius:2px;cursor:pointer;margin-top:.3rem;}
   #startBtn:disabled{opacity:.35;cursor:default;}
-  .gatehint{color:var(--ink-dim);font-size:.82rem;max-width:22rem;line-height:1.4;}
+  .gatehint{color:var(--ink-soft);font-size:.95rem;max-width:22rem;line-height:1.4;}
   .build{color:#3a3a3a;font-family:ui-monospace,monospace;font-size:.6rem;letter-spacing:.1em;margin-top:-.6rem;}
-  @media (max-height:700px){ #gate{gap:.8rem;} .modepick button,.pacepick button{padding:.65rem .4rem;} .gatehint{font-size:.76rem;} }
+  @media (max-height:700px){ #gate{gap:.8rem;} .modepick button,.pacepick button{padding:.65rem .4rem;} .gatehint{font-size:.88rem;} }
   #loadStatus{color:var(--ink-dim);font-size:.82rem;min-height:1.2em;}
   button:focus-visible{outline:2px solid var(--live);outline-offset:2px;}
 
@@ -136,7 +136,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">build 1017-d</div>
+  <div class="build" id="buildStamp">build 1017-e</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
