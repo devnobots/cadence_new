@@ -136,7 +136,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">build 1017-g</div>
+  <div class="build" id="buildStamp">build 1017-h</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
@@ -797,6 +797,18 @@ document.addEventListener('visibilitychange',()=>{
 /* ============================================================================
    Portrait lock
    ============================================================================ */
+// Fullscreen hides the browser bars (Android Chrome); iPhone Safari has no page fullscreen, so it's a no-op there.
+// Must be called synchronously inside the Start tap.
+function enterFullscreen(){
+  const d=document.documentElement, req=d.requestFullscreen||d.webkitRequestFullscreen;
+  if(!req || document.fullscreenElement || document.webkitFullscreenElement) return Promise.resolve();
+  try{ return Promise.resolve(req.call(d,{navigationUI:'hide'})).then(()=>LOG('fullscreen on')).catch(e=>LOG('fullscreen refused: '+e.message)); }
+  catch(e){ LOG('fullscreen error: '+e.message); return Promise.resolve(); }
+}
+function exitFullscreen(){
+  const x=document.exitFullscreen||document.webkitExitFullscreen;
+  if(x && (document.fullscreenElement||document.webkitFullscreenElement)){ try{ Promise.resolve(x.call(document)).catch(()=>{}); }catch(_){} }
+}
 async function lockPortrait(){
   try{ if(screen.orientation&&screen.orientation.lock) await screen.orientation.lock('portrait'); }catch(_){}
 }
@@ -864,7 +876,7 @@ el.startBtn.onclick=async ()=>{
   initAudioCtx();
   resumeCtx();
   try{ const b=actx.createBuffer(1,1,actx.sampleRate); const sn=actx.createBufferSource(); sn.buffer=b; sn.connect(actx.destination); sn.start(0); }catch(_){}
-  keepAwake(); lockPortrait();
+  keepAwake(); enterFullscreen().then(lockPortrait);
 
   try{
     if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
@@ -903,6 +915,7 @@ makeHold($('endBtn'), CONFIG.HOLD_MS, ()=>{
   stopGPS();
   releaseWake();
   try{ if(screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); }catch(_){}
+  exitFullscreen();
   if(actx && actx.state==='running'){ actx.suspend().catch(()=>{}); }
   el.app.classList.remove('visible');
   el.gate.classList.remove('hidden');
