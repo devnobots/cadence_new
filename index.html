@@ -55,7 +55,7 @@
   #app.visible{visibility:visible;}
 
   /* upper area is non-interactive (pocket-safe) */
-.readout{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;padding-top:4vh;pointer-events:none;}
+.readout{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding-top:.5rem;pointer-events:none;}
 
   /* gauge: 270° tick ring with a lime arc and needle; the big digit lives inside it */
   .gauge{position:relative;width:min(76vw,378px);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
@@ -74,7 +74,7 @@
   .unit{position:relative;color:var(--ink-dim);font-weight:600;font-size:clamp(.9rem,4vw,1.35rem);letter-spacing:.1em;margin-top:.2rem;}
   .goalline{margin-top:-.4rem;color:var(--ink-dim);font-size:.92rem;letter-spacing:.03em;}
   .goalline b{color:var(--ink);font-weight:600;}
-  .state{margin-top:1rem;font-weight:600;font-size:1.15rem;letter-spacing:.04em;color:var(--pause);height:1.4em;}
+  .state{margin-top:.5rem;font-weight:600;font-size:1.15rem;letter-spacing:.04em;color:var(--pause);height:1.4em;}
   .state.playing{color:var(--live);}
   .state.armed{color:var(--live);animation:armedpulse 1.8s ease-in-out infinite;}
   .state.warn{color:var(--pause);}
@@ -86,8 +86,11 @@
   .ratenum small{color:var(--ink-dim);font-weight:600;font-size:.6em;}
 
   /* hold-to-act controls */
-  .dock{display:flex;flex-direction:column;gap:.7rem;padding:1rem 1rem calc(1rem + 3.5rem);}  /* extra bottom room clears iOS Safari's floating toolbar */
-  @media (display-mode:standalone){ .dock{padding-bottom:1rem;} }  /* home-screen app has no browser toolbar */
+  .dock{display:flex;flex-direction:column;gap:.7rem;padding:.6rem 1rem 0;}
+  .enddock{margin-top:auto;display:flex;justify-content:center;padding:.5rem 1rem calc(.5rem + 3.5rem);}  /* extra bottom room clears iOS Safari's floating toolbar */
+  @media (display-mode:standalone){ .enddock{padding-bottom:.5rem;} }  /* home-screen app has no browser toolbar */
+  #paceBtn{flex:none;}
+  #paceBtn .pname{color:var(--live);}
   .transport{display:flex;gap:.7rem;}
   .holdbtn{position:relative;flex:1;overflow:hidden;background:#0d0d0d;border:1px solid var(--line);color:var(--ink-dim);font-family:var(--font);font-weight:700;font-size:1.05rem;letter-spacing:.03em;padding:1.1rem 0;border-radius:3px;cursor:pointer;touch-action:none;}
   .holdbtn .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--live);opacity:.18;}
@@ -133,7 +136,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">build 1017-b</div>
+  <div class="build" id="buildStamp">build 1017-c</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
@@ -168,6 +171,9 @@
       <button type="button" class="holdbtn" id="prevBtn"><span class="fill"></span><span class="lbl">&#8249;&#8249; Hold</span></button>
       <button type="button" class="holdbtn" id="nextBtn"><span class="fill"></span><span class="lbl">Hold &#8250;&#8250;</span></button>
     </div>
+    <button type="button" class="holdbtn" id="paceBtn"><span class="fill"></span><span class="lbl">Hold to change speed · <span class="pname" id="paceName">Cruise</span></span></button>
+  </div>
+  <div class="enddock">
     <button type="button" id="endBtn"><span class="fill"></span><span class="lbl">Hold to end</span></button>
   </div>
 </div>
@@ -839,7 +845,7 @@ function makeHold(node, ms, onComplete){
    Wiring
    ============================================================================ */
 function setMode(m){ mode=m; ['Walk','Jog','Cycle'].forEach(x=>$('mode'+x).setAttribute('aria-pressed', String(m===x.toLowerCase()))); }
-function setPace(p){ pace=p; ['Crawl','Cruise','Suffer'].forEach(x=>$('pace'+x).setAttribute('aria-pressed', String(p===x.toLowerCase()))); }
+function setPace(p){ pace=p; $('paceName').textContent=p[0].toUpperCase()+p.slice(1); ['Crawl','Cruise','Suffer'].forEach(x=>$('pace'+x).setAttribute('aria-pressed', String(p===x.toLowerCase()))); }
 $('modeWalk').onclick=()=>setMode('walk');
 $('modeJog').onclick=()=>setMode('jog');
 $('modeCycle').onclick=()=>setMode('cycle');
@@ -887,6 +893,9 @@ el.startBtn.onclick=async ()=>{
 // hold-to-skip + hold-to-end
 makeHold($('nextBtn'), CONFIG.HOLD_MS, ()=>loadTrack(trackIdx+1,wantSound));
 makeHold($('prevBtn'), CONFIG.HOLD_MS, ()=>loadTrack(trackIdx-1,wantSound));
+// hold-to-change-speed: step the 1× goal Crawl -> Cruise -> Suffer -> Crawl (goal line repaints itself)
+const PACES=['crawl','cruise','suffer'];
+makeHold($('paceBtn'), CONFIG.HOLD_MS, ()=>{ setPace(PACES[(PACES.indexOf(pace)+1)%PACES.length]); LOG('pace -> '+pace); });
 makeHold($('endBtn'), CONFIG.HOLD_MS, ()=>{
   armed=false; running=false; wantSound=false;
   stopSource();
