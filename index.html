@@ -135,7 +135,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">ver 1.0</div>
+  <div class="build" id="buildStamp">ver 1.1</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
@@ -239,11 +239,10 @@ const CONFIG = {
    ============================================================================ */
 const $=id=>document.getElementById(id);
 
-// ?list=<folder> plays the songs in that repo folder (shareable playlists); no param = repo root.
+// ?list=<folder> plays the songs in that repo folder (shareable playlists); a link without one is invalid.
 // Only plain folder names are accepted, so a link can't reach outside the repo.
 const LIST=(()=>{ const v=(new URLSearchParams(location.search).get('list')||'').trim(); return /^[A-Za-z0-9_-]+$/.test(v)?v:''; })();
-const LIST_BAD=new URLSearchParams(location.search).has('list') && !LIST;
-const LIST_TAG=LIST?LIST+' · ':'';   // prefix for status lines, e.g. "artist-a · 8 songs"
+const LIST_TAG=LIST+' · ';   // prefix for status lines, e.g. "artist-a · 8 songs"
 const el={
   gate:$('gate'), app:$('app'), startBtn:$('startBtn'), loadStatus:$('loadStatus'),
   metric:$('metric'), unit:$('unit'),
@@ -283,20 +282,21 @@ function fetchWithTimeout(url, opts, ms){
   return fetch(url, Object.assign({}, opts, {signal:ctl.signal})).finally(()=>clearTimeout(t));
 }
 async function loadPlaylist(){
-  const dir=LIST?LIST+'/':'';
+  // missing, empty or malformed ?list= : nothing to load and nothing to retry
+  if(!LIST){ el.loadStatus.textContent='Not a valid link — it must specify a list'; el.startBtn.textContent='Start'; el.startBtn.disabled=true; LOG('no ?list= in URL'); return; }
+  const dir=LIST+'/';
   const api=`https://api.github.com/repos/${CONFIG.REPO}/contents/${dir}?ref=${CONFIG.BRANCH}`;
   const t0=performance.now();
   el.startBtn.disabled=true; el.startBtn.textContent='Loading…'; el.loadStatus.textContent='Finding songs…';
   try{
-    if(LIST_BAD) throw new Error('bad playlist name');
     // never trust a cached listing: a song swap in the repo must show up on the next page open
     const res=await fetchWithTimeout(api+'&t='+Date.now(), {cache:'no-store'}, CONFIG.FETCH_TIMEOUT_MS);
-    if(res.status===404 && LIST) throw new Error(`playlist "${LIST}" not found`);
+    if(res.status===404) throw new Error(`playlist "${LIST}" not found`);
     if(!res.ok) throw new Error('list '+res.status);
     const items=await res.json(); if(!Array.isArray(items)) throw new Error('not a folder');
     const files=items.filter(x=>x.type==='file'&&/\.(mp3|m4a|aac|flac|wav)$/i.test(x.name))
       .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
-    if(!files.length) throw new Error(LIST?`playlist "${LIST}" has no songs`:'no audio files');
+    if(!files.length) throw new Error(`playlist "${LIST}" has no songs`);
     // the blob sha changes whenever the file content changes, so the URL changes too and no CDN or
     // browser cache can ever hand back an old version of a replaced song
     playlist=files.map(x=>`https://raw.githubusercontent.com/${CONFIG.REPO}/${CONFIG.BRANCH}/${dir}${encodeURIComponent(x.name)}?v=${(x.sha||'').slice(0,12)}`);
