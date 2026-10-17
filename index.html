@@ -72,7 +72,7 @@
   #needle{transition:transform .2s linear;}
   .metric{position:relative;font-weight:800;font-size:clamp(4.5rem,27vw,9.9rem);line-height:.85;letter-spacing:-.04em;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:-.15em;}
   .unit{position:relative;color:var(--ink-dim);font-weight:600;font-size:clamp(.9rem,4vw,1.35rem);letter-spacing:.1em;margin-top:.2rem;}
-  .goalline{margin-top:-.4rem;color:var(--ink-dim);font-size:.92rem;letter-spacing:.03em;}
+  .goalline{margin-top:-.4rem;color:var(--ink-dim);font-size:calc(.92rem + 4px);letter-spacing:.03em;}
   .goalline b{color:var(--ink);font-weight:600;}
   .state{margin-top:.5rem;font-weight:600;font-size:1.15rem;letter-spacing:.04em;color:var(--pause);height:1.4em;}
   .state.playing{color:var(--live);}
@@ -136,7 +136,7 @@
 
   <button type="button" id="startBtn" disabled>Loading…</button>
   <div id="loadStatus" aria-live="polite">Finding songs…</div>
-  <div class="build" id="buildStamp">build 1017-c</div>
+  <div class="build" id="buildStamp">build 1017-d</div>
   <p class="gatehint">Keep the screen on, phone mounted or in a pocket. Grant motion &amp; location when asked. Music speeds up as you do, hits 1× at your goal, and falls silent when you stop.</p>
 </div>
 
